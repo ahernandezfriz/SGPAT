@@ -1,0 +1,113 @@
+# docker-compose.yml (MODO DESARROLLO - vite PRODUCCION - nginx)
+services:
+  
+  # Base de Datos (Sin cambios)
+  db:
+    image: postgres:15-alpine
+    container_name: sgp-db
+    ports:
+      - "5433:5432"
+    volumes:
+      - sgp-postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_DB: ${DB_NAME:-sgp_permisos}
+    networks:
+      - sgp-network
+    restart: unless-stopped
+  
+   # pgAdmin (Sin cambios)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: sgp-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@permisos.cl"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - sgp-pgadmin_data:/var/lib/pgadmin
+    networks:
+      - sgp-network
+    depends_on:
+      - db
+    restart: unless-stopped
+
+
+  # Backend (Sin cambios)
+  backend:
+    container_name: sgp-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://${DB_USER:-admin}:${DB_PASSWORD:-admin123}@db:5432/${DB_NAME:-sgp_permisos}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-ESTO-ES-UN-SECRETO-MUY-SEGURO}
+      EMAIL_HOST: mailhog       # Nombre del servicio MailHog
+      EMAIL_PORT: 1025          # Puerto SMTP de MailHog
+      EMAIL_FROM: no-responder@sgpat.cl # Email "De" por defecto
+    networks:
+      - sgp-network
+    depends_on:
+      - db
+    command: sh -c "npx prisma generate && npm run dev"
+    restart: unless-stopped
+  
+  frontend:
+    image: node:18-alpine3.18 # Usamos la misma imagen de Node que el backend
+    container_name: sgp-frontend-dev
+    working_dir: /app
+    ports:
+      # Exponemos el puerto de Vite (servidor de desarrollo)
+      - "5173:5173"
+    volumes:
+      # 1. Mapea nuestro código local de 'frontend' al contenedor
+      - ./frontend:/app
+      # 2. Usa un volumen para 'node_modules' para no pisar los del host
+      - sgp-frontend_node_modules:/app/node_modules
+    networks:
+      - sgp-network
+    # OJO: Quitamos 'depends_on' para que inicie rápido
+    
+    # Comando para instalar dependencias y arrancar el dev server
+    command: sh -c "npm install && npm run dev"
+    restart: unless-stopped
+  
+  # --- ¡NUEVO SERVICIO! ---
+  mailhog:
+    image: mailhog/mailhog
+    container_name: sgp-mailhog
+    restart: always
+    ports:
+      - "1025:1025" # Puerto SMTP (para Nodemailer)
+      - "8025:8025" # Interfaz Web (para ti)
+    networks:
+      - sgp-network
+
+ 
+
+ 
+
+# --- VOLÚMENES (MODIFICADO) ---
+volumes:
+  sgp-postgres_data:
+    driver: local
+  sgp-pgadmin_data:
+    driver: local
+  # --- NUEVO VOLUMEN ---
+  # Este volumen es para los node_modules del frontend
+  sgp-frontend_node_modules:
+    driver: local
+
+networks:
+  sgp-network:
+    driver: bridge

@@ -1,0 +1,98 @@
+// backend/prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // Esta es la línea que soluciona el problema
+  binaryTargets = ["native", "linux-musl"]
+}
+
+// ----------
+// MODELOS DE DATOS
+// ----------
+
+model Area {
+  id        Int       @id @default(autoincrement())
+  nombre    String    @unique // 'Informática', 'Audiovisual', etc.
+  usuarios  Usuario[]
+}
+
+model Usuario {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  nombreCompleto String
+  password      String   // Hasheado
+  rol           Rol      @default(TRABAJADOR)
+  diasAdminDisponibles Float  @default(5.0)  // Contador de días (Regla de negocio)
+  areaId        Int
+  area          Area     @relation(fields: [areaId], references: [id])
+
+  // --- Relaciones (CORREGIDO) ---
+  // 1. Solicitudes que este usuario CREÓ
+  solicitudesCreadas    Solicitud[] @relation("TrabajadorSolicitudes")
+  // 2. Solicitudes que este usuario GESTIONÓ (Aprobó/Rechazó)
+  solicitudesGestionadas Solicitud[] @relation("AprobadorSolicitudes")
+
+ 
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+model Solicitud {
+  id            Int      @id @default(autoincrement())
+  
+  // Tipo principal
+  tipo          TipoSolicitud
+  
+  // Motivo (Nuestra decisión final: String simple)
+  // Será nulo si es Teletrabajo.
+  // Guardará "Matrimonio", "Cursos", etc., si es Administrativo.
+  motivo        String?  
+  
+  estado        EstadoSolicitud @default(PENDIENTE)
+  fechaInicio   DateTime @db.Date
+  fechaFin      DateTime? @db.Date // Para teletrabajo múltiple
+  jornada       TipoJornada
+
+ // --- Relaciones (CORREGIDO) ---
+  // 1. Quién CREÓ la solicitud (Obligatorio)
+  trabajadorId  Int
+  trabajador    Usuario  @relation("TrabajadorSolicitudes", fields: [trabajadorId], references: [id]) // <-- Make sure this line has the relation name
+
+  // 2. Quién GESTIONÓ la solicitud (Opcional)
+  aprobadorId   Int?
+  aprobador     Usuario? @relation("AprobadorSolicitudes", fields: [aprobadorId], references: [id])
+  
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+
+// --- ENUMS (Listas de opciones predefinidas) ---
+
+enum Rol {
+  TRABAJADOR
+  COORDINADOR
+  ADMIN
+}
+
+enum TipoSolicitud {
+  TELETRABAJO
+  ADMINISTRATIVO
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+enum TipoJornada {
+  COMPLETO
+  MANANA // Medio día mañana
+  TARDE  // Medio día tarde
+}

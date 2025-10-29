@@ -1,0 +1,42 @@
+{
+    "name": "sgp-backend",
+    "version": "1.0.0",
+    "description": "Backend para el Sistema de Gestión de Permisos",
+    "main": "src/app.js",
+    "scripts": {
+        "start": "node src/app.js",
+        "dev": "nodemon src/app.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "db:migrate": "npx prisma migrate dev --name init",
+        "db:studio": "npx prisma studio"
+    },
+    "keywords": [
+        "node",
+        "express",
+        "prisma",
+        "postgres"
+    ],
+    "author": "Desarrollador",
+    "license": "ISC",
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "express-validator": "^7.0.1",
+        "jsonwebtoken": "^9.0.2",
+        "morgan": "^1.10.0",
+        "nodemailer": "^6.10.1",
+        "pdfkit": "^0.17.2",
+        "pg": "^8.11.3",
+        "prisma": "^5.10.2"
+    },
+    "devDependencies": {
+        "@prisma/client": "^5.10.2",
+        "nodemon": "^3.0.1"
+    },
+    "prisma": {
+        "schema": "prisma/schema.prisma",
+        "seed": "node prisma/seed.js"
+    }
+}
