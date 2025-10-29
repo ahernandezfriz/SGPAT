@@ -39,19 +39,19 @@ Sigue estos pasos para ejecutar el proyecto en tu máquina local.
 
 ### 3. Crea el archivo de entorno .env
 
-# Variables de la Base de Datos
+#### Variables de la Base de Datos
 DB_USER=admin
 DB_PASSWORD=admin123
 DB_NAME=sgp_permisos
 DB_PORT=5433
 
-# URL de conexión (usada por el backend y Prisma)
+#### URL de conexión (usada por el backend y Prisma)
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public"
 
-# Secreto para JWT
+#### Secreto para JWT
 JWT_SECRET="ESTO-ES-UN-SECRETO-MUY-SEGURO"
 
-# Configuración de pgAdmin
+#### Configuración de pgAdmin
 PGADMIN_EMAIL=admin@permisos.cl
 PGADMIN_PASSWORD=admin
 
@@ -62,16 +62,16 @@ docker-compose up --build
 
 ### 5. Crear y Poblar la Base de Datos (Primera Vez)
 
-# A. Aplicar Migraciones (Crear las tablas):
+A. Aplicar Migraciones (Crear las tablas):
 docker-compose exec backend npx prisma migrate dev
 
-# B. Poblar la Base de Datos (Ejecutar el Seed)
+B. Poblar la Base de Datos (Ejecutar el Seed)
 docker-compose exec backend npx prisma db seed
 
-# Regenerar el cliente de Prisma (si haces cambios en schema.prisma)
+C. Regenerar el cliente de Prisma (si haces cambios en schema.prisma)
 docker-compose exec backend npx prisma generate
 
-# Usuarios creados de pruebas
+#####Usuarios creados de pruebas
 Email	                        Contraseña	Rol	         Área
 admin@permisos.cl	            admin123	 ADMIN	       Administración
 coordinador.info@permisos.cl	coord123	 COORDINADOR	 Informática
