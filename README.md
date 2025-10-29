@@ -37,7 +37,7 @@ Sigue estos pasos para ejecutar el proyecto en tu máquina local.
 
 ### 2. Clonar el Repositorio
 
-### 3. crea el archivo de entorno .env
+### 3. Crea el archivo de entorno .env
 
 # Variables de la Base de Datos
 DB_USER=admin
